@@ -25,10 +25,10 @@ async generateQrCode(generateQrCodeDto: GenerateQrCodeDto) {
   const expiresAt = new Date(Date.now() + expiresIn * 1000);
   const data = `ATTENDANCE-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-  const qrCode = await this.qrCodeModel.create({
+  const qrCode = (await this.qrCodeModel.create({
     data,
     expiresAt,
-  });
+  })) as any;
 
   // Return the exact format frontend expects
   return {
