@@ -1,35 +1,42 @@
+# ===============================
 # Stage 1: Builder
+# ===============================
 FROM node:22-alpine AS builder
 
-# Create app directory
+# Set working directory inside the container
 WORKDIR /usr/src/app
 
-# Install app dependencies
-# A wildcard is used to ensure both package.json AND package-lock.json are copied
-COPY package*.json ./
+# Copy package.json and package-lock.json from backend folder
+COPY backend/package*.json ./
 
 # Install dependencies
 RUN npm install
 
-# Bundle app source
-COPY . .
+# Copy the rest of the backend source code
+COPY backend ./
 
-# Creates a "dist" folder with the production build
+# Build the NestJS project
 RUN npm run build
 
+# ===============================
 # Stage 2: Production
+# ===============================
 FROM node:22-alpine
 
-# Create app directory
+# Set working directory for production
 WORKDIR /usr/src/app
 
-# Install app dependencies
-COPY package*.json ./
+# Copy package.json for production install
+COPY backend/package*.json ./
+
+# Install only production dependencies
 RUN npm install --only=production
 
-# Copy built app from builder
+# Copy built files from builder stage
 COPY --from=builder /usr/src/app/dist ./dist
 
-# Expose port and start app
+# Expose the port your app listens on
 EXPOSE 4000
-CMD [ "node", "dist/main.js" ]
+
+# Start the app
+CMD ["node", "dist/main.js"]
