@@ -1,90 +1,18 @@
-# QR Code Attendance System
+# QR-code-Attendance Project
 
-This is a QR code attendance system with a student and admin app.
+This project has been refactored into two standalone applications:
 
-## API Endpoints
+- **`admin-app/`**: Contains the administrative interface for managing QR code attendance.
+- **`student-app/`**: Contains the student-facing application for scanning QR codes.
 
-This document outlines the API endpoints required for the frontend application to function correctly.
+Each application is a separate Expo project and can be run independently.
 
-### Student
+## Getting Started
 
-#### `POST /api/attendance`
+To run either application:
 
-This endpoint is used by the student app to submit their attendance after scanning a QR code.
+1.  Navigate into the desired application directory (e.g., `cd admin-app` or `cd student-app`).
+2.  Install dependencies: `npm install`
+3.  Start the Expo development server: `npx expo start`
 
-**Request Body:**
-
-```json
-{
-  "name": "John Doe",
-  "level": "100",
-  "matricNumber": "12345",
-  "fingerprint": "unique-device-id",
-  "qrCode": "scanned-qr-code-data"
-}
-```
-
-**Response:**
-
-**Success (200):**
-
-
-```json
-{
-  "message": "Attendance submitted successfully"
-}
-```
-
-**Error (400):**
-
-```json
-{
-  "error": "Invalid QR code"
-}
-```
-
-### Admin
-
-#### `GET /api/attendance`
-
-This endpoint is used by the admin app to fetch the list of students who have checked in.
-
-**Response:**
-
-**Success (200):**
-
-```json
-[
-  {
-    "id": 1,
-    "name": "John Doe",
-    "level": "100",
-    "matricNumber": "12345",
-    "time": "10:00 AM"
-  },
-  {
-    "id": 2,
-    "name": "Jane Doe",
-    "level": "200",
-    "matricNumber": "67890",
-    "time": "10:05 AM"
-  }
-]
-```
-
-#### `POST /api/qrcode`
-
-This endpoint is used by the admin app to generate or regenerate a QR code.
-
-**Response:**
-
-**Success (200):**
-
-```json
-{
-  "qrCode": "new-qr-code-string",
-  "expiresIn": 60
-}
-```
-
-This will generate a new QR code that is valid for 60 seconds. The frontend will use this `qrCode` string to display the QR code image. The `expiresIn` value is used to display a countdown timer.
+Follow the instructions in the Expo CLI to open the app on your device or in a web browser.
