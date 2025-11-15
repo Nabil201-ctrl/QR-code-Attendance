@@ -31,7 +31,7 @@ export default function Index() {
 
       <View style={tw`mt-12 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl`}>
         <ThemedText style={tw`text-center text-sm`}>
-          📱 Scan QR codes • 🔒 Secure • ⚡ Fast
+          Scan QR codes • Secure • Fast
         </ThemedText>
       </View>
     </ThemedView>

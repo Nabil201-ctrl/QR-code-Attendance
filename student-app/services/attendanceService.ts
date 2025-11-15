@@ -1,14 +1,14 @@
-const API_BASE_URL = 'http://localhost:3000'; // Assuming backend runs on port 3000
+import { API_BASE_URL } from "../constants/env";
 
 export interface SubmitAttendancePayload {
   name: string;
   matricNumber: string;
   fingerprint: string;
-  qrCodeData: string; // Renamed from qrCode to match backend DTO
+  qrCodeData: string;
 }
 
 export async function submitAttendance(payload: SubmitAttendancePayload) {
-  const res = await fetch(`${API_BASE_URL}/attendance`, { // Corrected endpoint
+  const res = await fetch(`${API_BASE_URL}/attendance`, {
     method: 'POST',
     body: JSON.stringify(payload),
     headers: {
