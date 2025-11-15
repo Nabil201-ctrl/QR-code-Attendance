@@ -1,7 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { Student } from './schemas/student.schema';
-import { Model } from 'mongoose';
 import { getModelToken } from '@nestjs/mongoose';
 
 async function bootstrap() {

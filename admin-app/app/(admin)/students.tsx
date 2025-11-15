@@ -1,17 +1,16 @@
-import { View, Text, ScrollView, RefreshControl, TouchableOpacity } from 'react-native';
-import { ThemedView } from '../../components/common/ThemedView';
-import { ThemedText } from '../../components/common/ThemedText';
 import { useQuery } from '@tanstack/react-query';
-import { getStudents, Student } from '../../services/api'; // Import Student interface
+import { Link } from 'expo-router';
 import { useState } from 'react';
+import { RefreshControl, ScrollView, TouchableOpacity, View } from 'react-native';
 import tw from 'twrnc';
-import { useRouter } from 'expo-router';
+import { ThemedText } from '../../components/common/ThemedText';
+import { ThemedView } from '../../components/common/ThemedView';
+import { getStudents, Student } from '../../services/api';
 
 export default function StudentsScreen() {
   const [refreshing, setRefreshing] = useState(false);
-  const router = useRouter();
 
-  const { data: students, isLoading, refetch } = useQuery<Student[]>({ // Specify type for students
+  const { data: students, isLoading, refetch } = useQuery<Student[]>({
     queryKey: ['students'],
     queryFn: getStudents,
   });
@@ -40,14 +39,13 @@ export default function StudentsScreen() {
         </View>
 
         <View style={tw`px-6 mb-6`}>
-          <TouchableOpacity
-            style={tw`bg-blue-500 py-3 px-5 rounded-lg`}
-            onPress={() => router.push('/(admin)/add-student')}
-          >
-            <ThemedText style={tw`text-white font-bold text-center`}>
-              Add Student
-            </ThemedText>
-          </TouchableOpacity>
+          <Link href="/(admin)/add-student" asChild>
+            <TouchableOpacity style={tw`bg-blue-500 py-3 px-5 rounded-lg`}>
+              <ThemedText style={tw`text-white font-bold text-center`}>
+                Add Student
+              </ThemedText>
+            </TouchableOpacity>
+          </Link>
         </View>
 
         {isLoading ? (
@@ -60,7 +58,6 @@ export default function StudentsScreen() {
               <View style={tw`flex-row bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600`}>
                 <ThemedText style={tw`w-40 px-4 py-3 font-semibold text-sm`}>Name</ThemedText>
                 <ThemedText style={tw`w-40 px-4 py-3 font-semibold text-sm`}>Matric Number</ThemedText>
-                {/* Removed Level column */}
                 <ThemedText style={tw`w-40 px-4 py-3 font-semibold text-sm text-center`}>Actions</ThemedText>
               </View>
 
@@ -72,17 +69,13 @@ export default function StudentsScreen() {
                   <View style={tw`w-40 px-4 py-3`}>
                     <ThemedText>{student.matricNumber}</ThemedText>
                   </View>
-                  {/* Removed Level data */}
                   <View style={tw`w-40 px-4 py-3 flex-row justify-center`}>
-                    <TouchableOpacity
-                      style={tw`bg-yellow-500 py-2 px-4 rounded-lg mr-2`}
-                      onPress={() => router.push(`/(admin)/edit-student?id=${student._id}`)}
-                    >
-                      <ThemedText style={tw`text-white font-bold`}>Edit</ThemedText>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={tw`bg-red-500 py-2 px-4 rounded-lg`}
-                    >
+                    <Link href={`/(admin)/edit-student?id=${student._id}`} asChild>
+                      <TouchableOpacity style={tw`bg-yellow-500 py-2 px-4 rounded-lg mr-2`}>
+                        <ThemedText style={tw`text-white font-bold`}>Edit</ThemedText>
+                      </TouchableOpacity>
+                    </Link>
+                    <TouchableOpacity style={tw`bg-red-500 py-2 px-4 rounded-lg`}>
                       <ThemedText style={tw`text-white font-bold`}>Delete</ThemedText>
                     </TouchableOpacity>
                   </View>
