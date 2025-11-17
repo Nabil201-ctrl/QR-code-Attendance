@@ -43,6 +43,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "b616cca3-8821-4541-923f-7afcd430158a"
+      },
+      "BACKEND_URL": "https://qr-attendance-3dof.onrender.com"
     }
   }
 }

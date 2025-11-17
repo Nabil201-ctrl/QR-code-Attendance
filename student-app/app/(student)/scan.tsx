@@ -1,17 +1,17 @@
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert, Animated, Platform } from 'react-native';
-import { ThemedView } from '../../components/common/ThemedView';
-import { ThemedText } from '../../components/common/ThemedText';
-import { CameraView, useCameraPermissions } from 'expo-camera';
-import { useEffect, useState, useRef } from 'react';
-import * as Device from 'expo-device';
-import * as Application from 'expo-application';
-import { useMutation } from '@tanstack/react-query';
-import { queryClient } from '../../utils/queryClient';
-import { router } from 'expo-router';
-import tw from 'twrnc';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useMutation } from '@tanstack/react-query';
+import * as Application from 'expo-application';
+import { CameraView, useCameraPermissions } from 'expo-camera';
+import * as Device from 'expo-device';
+import { router } from 'expo-router';
+import { useEffect, useRef, useState } from 'react';
+import { Alert, Animated, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import tw from 'twrnc';
+import { ThemedText } from '../../components/common/ThemedText';
+import { ThemedView } from '../../components/common/ThemedView';
 import { submitAttendance } from '../../services/attendanceService'; // Import the new service
+import { queryClient } from '../../utils/queryClient';
 
 // Generate a unique device fingerprint
 async function generateDeviceFingerprint() {
@@ -204,7 +204,7 @@ export default function ScanScreen() {
       {!scanned ? (
         <View style={tw`flex-1`}>
           <CameraView
-            onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
+            onBarcodeScanned={handleBarCodeScanned} // Always active for debugging
             style={StyleSheet.absoluteFillObject}
             facing="back"
           />

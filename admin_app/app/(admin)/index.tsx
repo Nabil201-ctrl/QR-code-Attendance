@@ -86,9 +86,8 @@ export default function AdminScreen() {
 
         {/* Stats Cards */}
         <View style={tw`px-6 mb-6`}>
-          <ThemedText type="subtitle" style={tw`text-lg font-semibold mb-3`}>
-            Today's Overview
-          </ThemedText>
+                      <ThemedText type="subtitle" style={tw`text-lg font-semibold mb-3`}>
+                        Today&#39;s Overview          </ThemedText>
           <View style={tw`flex-row justify-between gap-3`}>
             <View style={tw`flex-1 bg-green-100 dark:bg-green-900/30 p-4 rounded-xl border border-green-200 dark:border-green-800`}>
               <View style={tw`flex-row items-center mb-1`}>

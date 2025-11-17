@@ -1,5 +1,4 @@
-// services/api.ts
-const API_BASE_URL = 'https://mybackend.loca.lt';
+import { API_BASE_URL } from "../constants/env";
 
 export interface Student {
   _id: string;
@@ -140,7 +139,7 @@ export async function testConnection(): Promise<boolean> {
     const students = await getStudents();
     console.log('✅ Backend connection successful! Found', students.length, 'students');
     return true;
-  } catch (error) {
+  } catch (error:any) {
     console.log('❌ Backend connection failed:', error.message);
     return false;
   }

@@ -1,4 +1,4 @@
-import { View, Text } from 'react-native';
+
 import { ThemedView } from '../../components/common/ThemedView';
 import { ThemedText } from '../../components/common/ThemedText';
 import tw from 'twrnc';
