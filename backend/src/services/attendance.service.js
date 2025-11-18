@@ -4,7 +4,8 @@ const QrCodeModel = require('../models/qrcode.model');
 
 class AttendanceService {
   async submitAttendance(submitAttendanceDto) {
-    const { name, matricNumber, qrCodeData } = submitAttendanceDto;
+    const { name, matricNumber, qrCodeData, deviceFingerprint } =
+      submitAttendanceDto;
 
     const qrCode = await QrCodeModel.findOne({ data: qrCodeData }).exec();
 
@@ -42,10 +43,25 @@ class AttendanceService {
       throw new Error('Attendance already submitted for today');
     }
 
+    const existingFingerprint = await AttendanceModel.findOne({
+      deviceFingerprint,
+      date: {
+        $gte: today,
+        $lt: tomorrow,
+      },
+    }).exec();
+
+    if (existingFingerprint) {
+      throw new Error(
+        'This device has already been used to submit attendance for a different student today'
+      );
+    }
+
     const attendance = await AttendanceModel.create({
       student: student._id,
       date: new Date(),
       present: true,
+      deviceFingerprint,
     });
 
     return attendance;

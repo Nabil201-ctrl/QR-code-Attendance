@@ -10,16 +10,17 @@ export default function StudentLayout() {
           animation: 'fade'
         }} 
       />
-      <Stack.Screen 
-        name="scan" 
-        options={{ 
+      <Stack.Screen
+        name="scan"
+        options={{
           presentation: 'modal',
           title: 'Scan QR Code',
+          animation: 'slide_from_bottom',
           headerStyle: {
             backgroundColor: '#3b82f6',
           },
           headerTintColor: '#fff',
-        }} 
+        }}
       />
     </Stack>
   );

@@ -130,6 +130,7 @@ export default function ScanScreen() {
   }, [permission]);
 
   const handleBarCodeScanned = async ({ data }: { data: string }) => {
+    console.log('Scanned data:', data);
     // Check if device has already scanned this QR code today
     const alreadyScanned = await hasScannedToday(data);
 
@@ -155,7 +156,7 @@ export default function ScanScreen() {
     mutation.mutate({
       name: name.trim(),
       matricNumber: matricNumber.trim(),
-      fingerprint: deviceFingerprint,
+      deviceFingerprint,
       qrCodeData, // Use qrCodeData
     });
   };
@@ -205,6 +206,9 @@ export default function ScanScreen() {
         <View style={tw`flex-1`}>
           <CameraView
             onBarcodeScanned={handleBarCodeScanned} // Always active for debugging
+            barcodeScannerSettings={{
+              barcodeTypes: ['qr'],
+            }}
             style={StyleSheet.absoluteFillObject}
             facing="back"
           />
