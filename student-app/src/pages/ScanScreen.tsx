@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
-import { Scanner } from '@yudiel/react-qr-scanner';
-import { useEffect, useState } from 'react';
+import { Html5QrcodeScanner } from 'html5-qrcode';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ThemedText } from '../components/common/ThemedText';
 import { ThemedView } from '../components/common/ThemedView';
@@ -16,6 +16,7 @@ export default function ScanScreen() {
   const [deviceFingerprint, setDeviceFingerprint] = useState('');
   const [cameraPermission, setCameraPermission] = useState<boolean | null>(null);
   const [scanEnabled, setScanEnabled] = useState(true);
+  const scannerRef = useRef<Html5QrcodeScanner | null>(null);
   const navigate = useNavigate();
 
   const mutation = useMutation({
@@ -34,8 +35,8 @@ export default function ScanScreen() {
   });
 
   useEffect(() => {
-    // Request camera permission
-    const requestCameraPermission = async () => {
+    // Request camera permission and generate fingerprint
+    const initialize = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
         stream.getTracks().forEach(track => track.stop());
@@ -43,27 +44,68 @@ export default function ScanScreen() {
       } catch (error) {
         setCameraPermission(false);
       }
+      
+      generateDeviceFingerprint().then(setDeviceFingerprint);
     };
 
-    requestCameraPermission();
-    generateDeviceFingerprint().then(setDeviceFingerprint);
+    initialize();
   }, []);
 
-  const handleScan = async (result: string) => {
-    if (!scanEnabled) return;
-    
-    console.log('Scanned data:', result);
-    
-    const alreadyScanned = await hasScannedToday(result);
-    if (alreadyScanned) {
-      alert('You have already marked your attendance for this class today.');
-      return;
+  useEffect(() => {
+    if (cameraPermission && !scanned && !scannerRef.current) {
+      // Initialize QR scanner
+      scannerRef.current = new Html5QrcodeScanner(
+        "qr-reader",
+        {
+          qrbox: {
+            width: 250,
+            height: 250,
+          },
+          fps: 5,
+          // Remove supportedScanTypes entirely - it will default to QR code only
+        },
+        false
+      );
+
+      scannerRef.current.render(
+        (decodedText: string) => {
+          if (!scanEnabled) return;
+          
+          console.log('Scanned data:', decodedText);
+          
+          // Check if already scanned today
+          hasScannedToday(decodedText).then(alreadyScanned => {
+            if (alreadyScanned) {
+              alert('You have already marked your attendance for this class today.');
+              return;
+            }
+
+            setScanEnabled(false); // Disable further scanning
+            setScanned(true);
+            setQrCodeData(decodedText);
+            
+            // Stop the scanner
+            if (scannerRef.current) {
+              scannerRef.current.clear();
+              scannerRef.current = null;
+            }
+          });
+        },
+        (error: string) => {
+          console.error('QR Scanner error:', error);
+          // Don't show error messages for normal operation
+        }
+      );
     }
 
-    setScanEnabled(false); // Disable further scanning
-    setScanned(true);
-    setQrCodeData(result);
-  };
+    // Cleanup function
+    return () => {
+      if (scannerRef.current) {
+        scannerRef.current.clear();
+        scannerRef.current = null;
+      }
+    };
+  }, [cameraPermission, scanned, scanEnabled]);
 
   const handleSubmit = async () => {
     if (!name.trim() || !matricNumber.trim()) {
@@ -84,7 +126,8 @@ export default function ScanScreen() {
     setQrCodeData('');
     setName('');
     setMatricNumber('');
-    setScanEnabled(true); // Re-enable scanning
+    setScanEnabled(true);
+    // Scanner will be reinitialized by the useEffect
   };
 
   const requestPermission = async () => {
@@ -133,29 +176,12 @@ export default function ScanScreen() {
       {!scanned ? (
         <div className="flex flex-col h-screen">
           <div className="flex-1 relative bg-black">
-            <Scanner
-              onResult={(result) => {
-                if (result) {
-                  handleScan(result.getText());
-                }
-              }}
-              onError={(error) => console.error('QR Scanner error:', error)}
-              constraints={{
-                facingMode: 'environment'
-              }}
-              styles={{
-                container: {
-                  width: '100%',
-                  height: '100%',
-                  position: 'relative'
-                },
-                video: {
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'cover'
-                }
-              }}
+            {/* QR Scanner Container */}
+            <div 
+              id="qr-reader"
+              className="w-full h-full"
             />
+            
             {/* Scanner Overlay */}
             <div className="absolute inset-0 flex justify-center items-center pointer-events-none">
               <div className="w-64 h-64 border-4 border-white rounded-2xl border-dashed opacity-80 relative">
@@ -181,7 +207,7 @@ export default function ScanScreen() {
             {/* Close/Back Button */}
             <button
               onClick={() => navigate(-1)}
-              className="absolute top-4 left-4 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-colors"
+              className="absolute top-4 left-4 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-colors z-10"
             >
               <span className="text-xl">✕</span>
             </button>
@@ -251,7 +277,7 @@ export default function ScanScreen() {
             </div>
 
             {/* Debug Info (remove in production) */}
-            {import.meta.env.NODE_ENV === 'development' && (
+            {import.meta.env.DEV && (
               <div className="mt-4 p-3 bg-gray-100 dark:bg-gray-800 rounded-lg">
                 <ThemedText className="text-xs font-mono break-all">
                   Device Fingerprint: {deviceFingerprint}

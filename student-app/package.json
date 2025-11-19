@@ -12,8 +12,10 @@
   "dependencies": {
     "@tanstack/react-query": "^5.90.10",
     "@yudiel/react-qr-scanner": "^2.4.1",
+    "html5-qrcode": "^2.3.8",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "react-qr-scanner": "^1.0.0-alpha.11",
     "react-router-dom": "^7.9.6"
   },
   "devDependencies": {
