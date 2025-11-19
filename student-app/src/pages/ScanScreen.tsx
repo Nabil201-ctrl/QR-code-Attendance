@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import { Scanner } from '@yudiel/react-qr-scanner';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ThemedText } from '../components/common/ThemedText';
 import { ThemedView } from '../components/common/ThemedView';
@@ -251,7 +251,7 @@ export default function ScanScreen() {
             </div>
 
             {/* Debug Info (remove in production) */}
-            {process.env.NODE_ENV === 'development' && (
+            {import.meta.env.NODE_ENV === 'development' && (
               <div className="mt-4 p-3 bg-gray-100 dark:bg-gray-800 rounded-lg">
                 <ThemedText className="text-xs font-mono break-all">
                   Device Fingerprint: {deviceFingerprint}

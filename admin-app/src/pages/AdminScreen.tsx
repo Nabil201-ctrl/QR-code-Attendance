@@ -1,22 +1,17 @@
 import { useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ThemedText } from '../components/common/ThemedText';
 import { ThemedView } from '../components/common/ThemedView';
 import { getAttendance } from '../services/api';
 
 export default function AdminScreen() {
-  const [refreshing, setRefreshing] = useState(false);
-
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['attendance'],
     queryFn: getAttendance,
   });
 
   const onRefresh = async () => {
-    setRefreshing(true);
     await refetch();
-    setRefreshing(false);
   };
 
   if (error) {
@@ -45,7 +40,11 @@ export default function AdminScreen() {
                 Manage attendance and QR codes
               </ThemedText>
             </div>
-            <button onClick={onRefresh} className="p-2">
+            <button 
+              onClick={onRefresh} 
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              title="Refresh data"
+            >
               <span className="text-blue-500 text-xl">🔄</span>
             </button>
           </div>
@@ -54,14 +53,20 @@ export default function AdminScreen() {
         {/* Quick Actions */}
         <div className="px-6 mb-6">
           <div className="flex gap-3">
-            <Link to="/admin/generate-qr" className="flex-1 bg-purple-500 p-4 rounded-xl flex items-center justify-center shadow-lg">
+            <Link 
+              to="/admin/generate-qr" 
+              className="flex-1 bg-purple-500 p-4 rounded-xl flex items-center justify-center shadow-lg hover:bg-purple-600 transition-colors"
+            >
               <span className="text-white text-xl mr-2">📱</span>
               <ThemedText className="text-white font-semibold">
                 Generate QR
               </ThemedText>
             </Link>
             
-            <Link to="/admin/students" className="flex-1 bg-blue-500 p-4 rounded-xl flex items-center justify-center shadow-lg">
+            <Link 
+              to="/admin/students" 
+              className="flex-1 bg-blue-500 p-4 rounded-xl flex items-center justify-center shadow-lg hover:bg-blue-600 transition-colors"
+            >
               <span className="text-white text-xl mr-2">👥</span>
               <ThemedText className="text-white font-semibold">
                 Students
@@ -137,8 +142,11 @@ export default function AdminScreen() {
             </div>
           ) : students.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 bg-gray-50 dark:bg-gray-800 rounded-xl">
-              <span className="text-gray-400 text-4xl mb-2">⚠️</span>
+              <span className="text-gray-400 text-4xl mb-2">📊</span>
               <ThemedText className="text-gray-500">No attendance records found</ThemedText>
+              <ThemedText className="text-gray-400 text-sm mt-2">
+                Generate a QR code and have students scan it to start recording attendance
+              </ThemedText>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -155,7 +163,7 @@ export default function AdminScreen() {
 
                 {/* Table Rows */}
                 {students.map(student => (
-                  <div key={student.id} className="flex border-b border-gray-100 dark:border-gray-700 items-center min-h-12">
+                  <div key={student.id} className="flex border-b border-gray-100 dark:border-gray-700 items-center min-h-12 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
                     <div className="w-40 px-4 py-3">
                       <ThemedText className="font-semibold">{student.name}</ThemedText>
                       <ThemedText className="text-gray-500 text-xs">
@@ -174,6 +182,13 @@ export default function AdminScreen() {
                   </div>
                 ))}
               </div>
+              
+              {/* Table Info */}
+              {allDates.length > 7 && (
+                <ThemedText className="text-gray-500 text-xs mt-2 text-center">
+                  Showing last 7 days of {allDates.length} total dates
+                </ThemedText>
+              )}
             </div>
           )}
         </div>
