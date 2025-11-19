@@ -5,3 +5,5 @@ admin-app/.expo
 backend/backend
 backend/test
 backend/dist
+# Local Netlify folder
+.netlify
