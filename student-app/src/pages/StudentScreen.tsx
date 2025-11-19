@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ThemedText } from '../components/common/ThemedText';
 import { ThemedView } from '../components/common/ThemedView';
@@ -6,9 +6,6 @@ import { useColorScheme } from '../hooks/useColorScheme';
 
 export default function StudentScreen() {
   const { colorScheme, toggleColorScheme } = useColorScheme();
-  const scaleAnim = useRef(0.8);
-  const fadeAnim = useRef(0);
-  const pulseAnim = useRef(1);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {

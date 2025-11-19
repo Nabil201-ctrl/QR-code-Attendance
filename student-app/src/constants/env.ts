@@ -1,1 +1,1 @@
-export const API_BASE_URL = import.meta.env.REACT_APP_BACKEND_URL || 'https://qr-attendance-3dof.onrender.com';
+export const API_BASE_URL = import.meta.env.REACT_APP_BACKEND_URL;

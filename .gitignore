@@ -7,3 +7,4 @@ backend/test
 backend/dist
 # Local Netlify folder
 .netlify
+.env
