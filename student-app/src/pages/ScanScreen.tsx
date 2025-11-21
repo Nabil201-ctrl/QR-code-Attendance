@@ -61,38 +61,49 @@ export default function ScanScreen() {
 
     const html5QrCode = new Html5Qrcode('qr-reader');
 
-    async function startScanner() {
-      try {
-        const devices = await Html5Qrcode.getCameras();
-        if (!devices || devices.length === 0) return;
+ async function startScanner() {
+  try {
+    const devices = await Html5Qrcode.getCameras();
+    if (devices && devices.length) {
 
-        // Pick the first supported camera (usually back camera)
-        const cameraId = devices[0].id;
+      // Try to find the back camera
+      let backCam = devices.find(d =>
+        d.label.toLowerCase().includes("back") ||
+        d.label.toLowerCase().includes("rear") ||
+        (d as any).facingMode === "environment"
+      );
 
-        await html5QrCode.start(
-          { deviceId: { exact: cameraId } },
-          {
-            fps: 10,
-            qrbox: 250,
-            aspectRatio: 1.0
-          },
-          decodedText => {
-            if (!scanEnabled) return;
-
-            setScanEnabled(false);
-            setScanned(true);
-            setQrCodeData(decodedText);
-
-            html5QrCode.stop().catch(() => {});
-          },
-          error => console.log('Scan error', error)
-        );
-
-        scannerRef.current = html5QrCode;
-      } catch (error) {
-        console.error('Scanner start failed:', error);
+      // If not found, pick the last device (most phones: back cam)
+      if (!backCam) {
+        backCam = devices[devices.length - 1];
       }
+
+      await html5QrCode.start(
+        { deviceId: { exact: backCam.id } },
+        {
+          fps: 10,
+          qrbox: 250,
+          aspectRatio: 1.0,
+        },
+        (decodedText) => {
+          if (!scanEnabled) return;
+
+          setScanEnabled(false);
+          setScanned(true);
+          setQrCodeData(decodedText);
+
+          html5QrCode.stop().catch(() => {});
+        },
+        (err) => console.log("Scan error", err)
+      );
+
+      scannerRef.current = html5QrCode;
     }
+  } catch (e) {
+    console.error("Scanner start failed:", e);
+  }
+}
+
 
     startScanner();
 
