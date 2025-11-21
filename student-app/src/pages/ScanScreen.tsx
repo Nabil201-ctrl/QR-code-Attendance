@@ -62,7 +62,9 @@ export default function ScanScreen() {
             height: 250,
           },
           fps: 5,
-          // Remove supportedScanTypes entirely - it will default to QR code only
+          // Prefer the environment (back) camera on mobile devices — helps avoid black/blank
+          // video in some browsers/devices that default to an unsupported stream.
+          videoConstraints: { facingMode: { ideal: 'environment' } },
         },
         false
       );
@@ -179,7 +181,8 @@ export default function ScanScreen() {
             {/* QR Scanner Container */}
             <div 
               id="qr-reader"
-              className="w-full h-full"
+              className="w-full h-full min-h-[320px]"
+              // ensure the container has some minimum height in case parent sizing collapses
             />
             
             {/* Scanner Overlay */}
