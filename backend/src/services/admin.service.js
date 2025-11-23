@@ -21,38 +21,58 @@ class AdminService {
   }
 
   async getAttendance() {
-    const attendanceRecords = await AttendanceModel.find().populate('student').exec();
+    // Get all unique meeting dates from QR codes, considering only the date part
+    const meetingDates = (await QrCodeModel.distinct('createdAt')).map(date => {
+        const d = new Date(date);
+        return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    });
+    const uniqueMeetingDates = Array.from(new Set(meetingDates.map(d => d.getTime()))).map(time => new Date(time));
+    const sortedMeetingDates = uniqueMeetingDates.sort((a, b) => a - b);
 
-    const studentAttendanceMap = new Map();
+    const allStudents = await StudentModel.find().exec();
+    const allAttendance = await AttendanceModel.find().exec();
 
-    for (const record of attendanceRecords) {
-      if (!record.student) {
-        continue;
-      }
-      const student = record.student;
-      const studentId = student._id.toString();
+    const studentAttendance = allStudents.map(student => {
+      const studentRecords = allAttendance.filter(record => record.student.equals(student._id));
       
-      if (!studentAttendanceMap.has(studentId)) {
-        studentAttendanceMap.set(studentId, {
-          id: student._id,
-          name: student.name,
-          matricNumber: student.matricNumber,
-          dates: {},
+      let presentCount = 0;
+      const attendanceDetails = sortedMeetingDates.map(meetingDate => {
+        const record = studentRecords.find(r => {
+            const recordDate = new Date(r.date);
+            return recordDate.getFullYear() === meetingDate.getFullYear() &&
+                   recordDate.getMonth() === meetingDate.getMonth() &&
+                   recordDate.getDate() === meetingDate.getDate();
         });
-      }
-      const studentData = studentAttendanceMap.get(studentId);
-      const dateKey = record.date.toISOString().split('T')[0];
-      studentData.dates[dateKey] = record.present ? 1 : 0;
-    }
 
-    const students = Array.from(studentAttendanceMap.values());
-    const allDates = Array.from(new Set(attendanceRecords.map(record => record.date.toISOString().split('T')[0]))).sort();
+        if (record && record.present) {
+          presentCount++;
+          return { date: meetingDate.toISOString().split('T')[0], status: 1 };
+        }
+        return { date: meetingDate.toISOString().split('T')[0], status: 0 };
+      });
 
-    return { students, allDates };
+      const attendancePercentage = sortedMeetingDates.length > 0 
+        ? (presentCount / sortedMeetingDates.length) * 100 
+        : 0;
+
+      return {
+        id: student._id,
+        name: student.name,
+        matricNumber: student.matricNumber,
+        attendancePercentage: attendancePercentage.toFixed(2),
+        attendanceDetails,
+      };
+    });
+
+    return {
+      students: studentAttendance,
+      allDates: sortedMeetingDates.map(d => d.toISOString().split('T')[0]),
+    };
   }
 
   async getStudents() {
-    return StudentModel.find().exec();
+    const { students } = await this.getAttendance();
+    return students;
   }
 
   async createStudent(createStudentDto) {

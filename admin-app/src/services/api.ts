@@ -4,6 +4,8 @@ export interface Student {
   _id: string;
   name: string;
   matricNumber: string;
+  attendancePercentage: string;
+  attendanceDetails: { date: string; status: number }[];
 }
 
 export interface AttendanceData {
@@ -20,12 +22,7 @@ export interface QrCodeResponse {
 }
 
 export interface AttendanceResponse {
-  students: Array<{
-    id: string;
-    name: string;
-    matricNumber: string;
-    dates: { [date: string]: number };
-  }>;
+  students: Student[];
   allDates: string[];
 }
 

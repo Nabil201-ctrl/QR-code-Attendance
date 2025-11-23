@@ -18,12 +18,35 @@ export default function AdminScreen() {
     alert('Error: Failed to load attendance data. Make sure the server is running.');
   }
 
+  // Show loading state
+  if (isLoading) {
+    return (
+      <ThemedView className="flex-1 items-center justify-center">
+        <ThemedText>Loading attendance data...</ThemedText>
+      </ThemedView>
+    );
+  }
+
   const students = data?.students || [];
   const allDates = data?.allDates || [];
 
-  const latestDate = allDates[0];
-  const presentCount = students.filter(student => student.dates[latestDate] === 1).length;
-  const absentCount = students.filter(student => student.dates[latestDate] === 0).length;
+  // Safe handling of latestDate
+  const latestDate = allDates.length > 0 ? allDates[allDates.length - 1] : undefined;
+  
+  const presentCount = latestDate
+    ? students.filter(student => {
+        const detail = student.attendanceDetails.find(d => d.date === latestDate);
+        return detail?.status === 1;
+      }).length
+    : 0;
+    
+  const absentCount = latestDate
+    ? students.filter(student => {
+        const detail = student.attendanceDetails.find(d => d.date === latestDate);
+        return detail?.status === 0;
+      }).length
+    : 0;
+
   const totalStudents = students.length;
 
   return (
@@ -136,11 +159,7 @@ export default function AdminScreen() {
             </ThemedText>
           </div>
 
-          {isLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <ThemedText>Loading attendance records...</ThemedText>
-            </div>
-          ) : students.length === 0 ? (
+          {students.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 bg-gray-50 dark:bg-gray-800 rounded-xl">
               <span className="text-gray-400 text-4xl mb-2">📊</span>
               <ThemedText className="text-gray-500">No attendance records found</ThemedText>
@@ -163,22 +182,24 @@ export default function AdminScreen() {
 
                 {/* Table Rows */}
                 {students.map(student => (
-                  <div key={student.id} className="flex border-b border-gray-100 dark:border-gray-700 items-center min-h-12 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                  <div key={student._id} className="flex border-b border-gray-100 dark:border-gray-700 items-center min-h-12 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
                     <div className="w-40 px-4 py-3">
                       <ThemedText className="font-semibold">{student.name}</ThemedText>
                       <ThemedText className="text-gray-500 text-xs">
                         {student.matricNumber}
                       </ThemedText>
                     </div>
-                    {allDates.slice(0, 7).map(date => (
-                      <div key={date} className="w-20 flex items-center justify-center px-2">
-                        <span className={`text-lg ${
-                          student.dates[date] === 1 ? 'text-green-500' : 'text-red-500'
-                        }`}>
-                          {student.dates[date] === 1 ? "✅" : "❌"}
-                        </span>
-                      </div>
-                    ))}
+                    {allDates.slice(0, 7).map(date => {
+                      const detail = student.attendanceDetails.find(d => d.date === date);
+                      const isPresent = detail?.status === 1;
+                      return (
+                        <div key={date} className="w-20 flex items-center justify-center px-2">
+                          <span className={`text-lg ${isPresent ? 'text-green-500' : 'text-red-500'}`}>
+                            {isPresent ? '✅' : '❌'}
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                 ))}
               </div>

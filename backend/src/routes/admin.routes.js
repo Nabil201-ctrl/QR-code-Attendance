@@ -1,11 +1,20 @@
 const express = require('express');
 const adminService = require('../services/admin.service');
+const adminController = require('../controllers/admin.controller');
 const validationMiddleware = require('../middleware/validation.middleware');
 const createStudentSchema = require('../dto/create-student.dto');
 const updateStudentSchema = require('../dto/update-student.dto');
 const generateQrCodeSchema = require('../dto/generate-qr-code.dto');
 
 const router = express.Router();
+
+// Passkey routes
+router.post('/passkey/register-request', adminController.getRegistrationOptions);
+router.post('/passkey/register', adminController.verifyRegistration);
+router.post('/passkey/login-request', adminController.getAuthenticationOptions);
+router.post('/passkey/login', adminController.verifyAuthentication);
+// Simple env-based login for local/dev testing
+router.post('/simple-login', adminController.simpleLogin);
 
 router.post(
   '/qr-code',

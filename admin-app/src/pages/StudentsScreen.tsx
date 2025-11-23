@@ -1,9 +1,33 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ThemedText } from '../components/common/ThemedText';
 import { ThemedView } from '../components/common/ThemedView';
 import type { Student } from '../services/api';
 import { deleteStudent, getStudents } from '../services/api';
+
+const AttendanceDetail: React.FC<{ details: { date: string; status: number }[] }> = ({ details }) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div>
+      <button onClick={() => setIsOpen(!isOpen)} className="text-blue-500 hover:underline">
+        {isOpen ? 'Hide Details' : 'Show Details'}
+      </button>
+      {isOpen && (
+        <div className="mt-2 p-2 border rounded">
+          {details.map(detail => (
+            <div key={detail.date} className="flex justify-between">
+              <ThemedText>{detail.date}</ThemedText>
+              <ThemedText>{detail.status === 1 ? 'Present' : 'Absent'}</ThemedText>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 
 export default function StudentsScreen() {
   const queryClient = useQueryClient();
@@ -76,20 +100,25 @@ export default function StudentsScreen() {
           <div className="mx-6 mb-6">
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden">
               <div className="flex bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
-                <ThemedText className="w-40 px-4 py-3 font-semibold text-sm">Name</ThemedText>
-                <ThemedText className="w-40 px-4 py-3 font-semibold text-sm">Matric Number</ThemedText>
-                <ThemedText className="w-40 px-4 py-3 font-semibold text-sm text-center">Actions</ThemedText>
+                <ThemedText className="w-1/4 px-4 py-3 font-semibold text-sm">Name</ThemedText>
+                <ThemedText className="w-1/4 px-4 py-3 font-semibold text-sm">Matric Number</ThemedText>
+                <ThemedText className="w-1/4 px-4 py-3 font-semibold text-sm">Attendance</ThemedText>
+                <ThemedText className="w-1/4 px-4 py-3 font-semibold text-sm text-center">Actions</ThemedText>
               </div>
 
               {students?.map(student => (
                 <div key={student._id} className="flex border-b border-gray-100 dark:border-gray-700 items-center hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
-                  <div className="w-40 px-4 py-3">
+                  <div className="w-1/4 px-4 py-3">
                     <ThemedText className="font-semibold">{student.name}</ThemedText>
                   </div>
-                  <div className="w-40 px-4 py-3">
+                  <div className="w-1/4 px-4 py-3">
                     <ThemedText className="text-gray-600 dark:text-gray-400">{student.matricNumber}</ThemedText>
                   </div>
-                  <div className="w-40 px-4 py-3 flex justify-center space-x-2">
+                  <div className="w-1/4 px-4 py-3">
+                    <ThemedText>{student.attendancePercentage}%</ThemedText>
+                    <AttendanceDetail details={student.attendanceDetails} />
+                  </div>
+                  <div className="w-1/4 px-4 py-3 flex justify-center space-x-2">
                     <Link 
                       to={`/admin/edit-student/${student._id}`} 
                       className="bg-yellow-500 hover:bg-yellow-600 py-2 px-4 rounded-lg transition-colors"

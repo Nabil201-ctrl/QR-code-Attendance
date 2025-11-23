@@ -1,1 +1,2 @@
-export const API_BASE_URL = import.meta.env.REACT_APP_BACKEND_URL || 'https://qr-attendance-3dof.onrender.com';
+// Prefer Vite-style env var, fall back to legacy REACT_APP_BACKEND_URL, then to deployed URL
+export const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || import.meta.env.REACT_APP_BACKEND_URL || 'https://qr-attendance-3dof.onrender.com';
