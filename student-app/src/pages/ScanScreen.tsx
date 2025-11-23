@@ -61,49 +61,52 @@ export default function ScanScreen() {
 
     const html5QrCode = new Html5Qrcode('qr-reader');
 
- async function startScanner() {
-  try {
-    const devices = await Html5Qrcode.getCameras();
-    if (devices && devices.length) {
+    async function startScanner() {
+      try {
+        const devices = await Html5Qrcode.getCameras();
+        if (!devices || !devices.length) return;
 
-      // Try to find the back camera
-      let backCam = devices.find(d =>
-        d.label.toLowerCase().includes("back") ||
-        d.label.toLowerCase().includes("rear") ||
-        (d as any).facingMode === "environment"
-      );
+        // Try to find the back camera
+        let backCam = devices.find(d =>
+          d.label.toLowerCase().includes('back') ||
+          d.label.toLowerCase().includes('rear') ||
+          (d as any).facingMode === 'environment'
+        );
 
-      // If not found, pick the last device (most phones: back cam)
-      if (!backCam) {
-        backCam = devices[devices.length - 1];
+        // If not found, pick the last device (most phones: back cam)
+        if (!backCam) backCam = devices[devices.length - 1];
+
+        // set ref before starting so callbacks can access it
+        scannerRef.current = html5QrCode;
+
+        await html5QrCode.start(
+          { deviceId: { exact: backCam.id } },
+          { fps: 10, qrbox: 250, aspectRatio: 1.0 },
+          (decodedText) => {
+            if (!scanEnabled) return;
+
+            // update state in a predictable order
+            setQrCodeData(decodedText);
+            setScanned(true);
+            setScanEnabled(false);
+
+            // stop the scanner via the ref (avoid racing with other stops/cleanup)
+            (async () => {
+              try {
+                await scannerRef.current?.stop();
+              } catch (err) {
+                console.warn('Error stopping scanner after decode:', err);
+              } finally {
+                scannerRef.current = null;
+              }
+            })();
+          },
+          (err) => console.log('Scan error', err)
+        );
+      } catch (error) {
+        console.error('Scanner start failed:', error);
       }
-
-      await html5QrCode.start(
-        { deviceId: { exact: backCam.id } },
-        {
-          fps: 10,
-          qrbox: 250,
-          aspectRatio: 1.0,
-        },
-        (decodedText) => {
-          if (!scanEnabled) return;
-
-          setScanEnabled(false);
-          setScanned(true);
-          setQrCodeData(decodedText);
-
-          html5QrCode.stop().catch(() => {});
-        },
-        (err) => console.log("Scan error", err)
-      );
-
-      scannerRef.current = html5QrCode;
     }
-  } catch (e) {
-    console.error("Scanner start failed:", e);
-  }
-}
-
 
     startScanner();
 
