@@ -33,10 +33,24 @@ export default function ScanScreen() {
       navigate(-1);
     },
     onError: (error: any) => {
-      alert(`Error: ${error.message}`);
+      const msg = error?.message || 'Failed to submit attendance';
+      setSubmitError(msg);
+      // If backend reports expired QR code, surface a special popup
+      try {
+        if (typeof msg === 'string' && msg.toLowerCase().includes('expired')) {
+          setExpiredModalVisible(true);
+        }
+      } catch (e) {
+        // ignore
+      }
       setScanEnabled(true);
     }
   });
+
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [expiredModalVisible, setExpiredModalVisible] = useState(false);
+  const [penaltyWarningVisible, setPenaltyWarningVisible] = useState(false);
+  const [wasWarned, setWasWarned] = useState(false);
 
   // Request permission and get device fingerprint
   useEffect(() => {
@@ -118,20 +132,38 @@ export default function ScanScreen() {
     };
   }, [cameraPermission, scanned, scanEnabled]);
 
-  const handleSubmit = () =>
+  const handleSubmit = () => {
+    setSubmitError(null);
+
+    if (!name.trim() || !matricNumber.trim()) {
+      setSubmitError('Please enter both your full name and matric number.');
+      return;
+    }
+
     mutation.mutate({
       name: name.trim(),
       matricNumber: matricNumber.trim(),
       deviceFingerprint,
       qrCodeData
     });
+  };
 
   const resetScanner = () => {
+    // If the last submission failed due to an expired code and the user hasn't
+    // been warned yet, show a penalty warning modal before allowing re-scan.
+    if (expiredModalVisible && !wasWarned) {
+      setPenaltyWarningVisible(true);
+      return;
+    }
+
     setScanned(false);
     setQrCodeData('');
     setName('');
     setMatricNumber('');
     setScanEnabled(true);
+    // reset expired-related UI flags when actually reseting
+    setExpiredModalVisible(false);
+    setPenaltyWarningVisible(false);
   };
 
   const requestPermission = async () => {
@@ -268,6 +300,14 @@ export default function ScanScreen() {
               </button>
             </div>
 
+            {submitError && (
+              <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/30 rounded-xl border border-red-200 dark:border-red-800">
+                <ThemedText className="text-red-700 dark:text-red-300 text-sm">
+                  {submitError}
+                </ThemedText>
+              </div>
+            )}
+
             <div className="mt-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl border border-yellow-200 dark:border-yellow-800">
               <ThemedText className="text-center text-sm text-yellow-800 dark:text-yellow-200">
                 🔒 Your device fingerprint is recorded to prevent duplicate submissions
@@ -284,6 +324,89 @@ export default function ScanScreen() {
                 </ThemedText>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Expired QR Modal */}
+      {expiredModalVisible && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="w-11/12 max-w-md bg-white dark:bg-gray-800 rounded-xl p-6">
+            <div className="flex items-start">
+              <div className="text-3xl mr-3">⚠️</div>
+              <div className="flex-1">
+                <ThemedText type="title" className="mb-2">QR Code Expired</ThemedText>
+                <ThemedText className="text-sm text-gray-700 dark:text-gray-300 mb-4">
+                  This QR code has expired and cannot be used to record attendance.
+                </ThemedText>
+                <ThemedText className="text-sm text-gray-700 dark:text-gray-300 mb-4 font-semibold">
+                  If you attempt to scan again you may be flagged or penalized.
+                </ThemedText>
+
+                <div className="flex gap-3 mt-4">
+                  <button
+                    onClick={() => { setExpiredModalVisible(false); navigate(-1); }}
+                    className="flex-1 bg-gray-200 dark:bg-gray-700 p-3 rounded-lg"
+                  >
+                    <ThemedText className="text-center">Go Back</ThemedText>
+                  </button>
+
+                  <button
+                    onClick={() => { setPenaltyWarningVisible(true); }}
+                    className="flex-1 bg-red-500 p-3 rounded-lg text-white"
+                  >
+                    <ThemedText className="text-center text-white">Scan Again Anyway</ThemedText>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Penalty Warning Modal (confirmation) */}
+      {penaltyWarningVisible && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/50">
+          <div className="w-11/12 max-w-md bg-white dark:bg-gray-800 rounded-xl p-6">
+            <div className="flex items-start">
+              <div className="text-3xl mr-3">🚨</div>
+              <div className="flex-1">
+                <ThemedText type="title" className="mb-2">Warning</ThemedText>
+                <ThemedText className="text-sm text-gray-700 dark:text-gray-300 mb-4">
+                  Rescanning an expired QR code may be considered misuse and could lead to penalties.
+                </ThemedText>
+                <ThemedText className="text-sm text-gray-700 dark:text-gray-300 mb-4 font-semibold">
+                  Are you sure you want to continue?
+                </ThemedText>
+
+                <div className="flex gap-3 mt-4">
+                  <button
+                    onClick={() => { setPenaltyWarningVisible(false); }}
+                    className="flex-1 bg-gray-200 dark:bg-gray-700 p-3 rounded-lg"
+                  >
+                    <ThemedText className="text-center">Cancel</ThemedText>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      // mark that user was warned and allow rescan
+                      setWasWarned(true);
+                      setPenaltyWarningVisible(false);
+                      setExpiredModalVisible(false);
+                      // actually reset scanner so they can scan again
+                      setScanned(false);
+                      setQrCodeData('');
+                      setName('');
+                      setMatricNumber('');
+                      setScanEnabled(true);
+                    }}
+                    className="flex-1 bg-red-600 p-3 rounded-lg text-white"
+                  >
+                    <ThemedText className="text-center text-white">Proceed</ThemedText>
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}

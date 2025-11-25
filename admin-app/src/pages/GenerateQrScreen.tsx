@@ -13,16 +13,18 @@ type ExpirationOption = {
 
 export default function GenerateQrScreen() {
   const [expiresIn, setExpiresIn] = useState('3600');
+  const [purpose, setPurpose] = useState('');
   const [qrCodeData, setQrCodeData] = useState<string | null>(null);
   const [expiresAt, setExpiresAt] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const generateQrMutation = useMutation({
-    mutationFn: (data: { expiresIn: number }) => generateQrCode(data.expiresIn),
+    mutationFn: (data: { expiresIn: number; purpose: string }) => generateQrCode(data.expiresIn, data.purpose),
     onSuccess: (data) => {
       setError(null);
       setQrCodeData(data.data);
       setExpiresAt(data.expiresAt);
+      if (data.purpose) setPurpose(data.purpose);
       alert('Success: QR Code generated successfully!');
     },
     onError: (error: Error) => {
@@ -38,7 +40,12 @@ export default function GenerateQrScreen() {
       alert('Invalid Input: Please enter a valid positive number for expiration time.');
       return;
     }
-    generateQrMutation.mutate({ expiresIn: expiresInNum });
+    if (!purpose || purpose.trim().length < 3) {
+      alert('Please enter a purpose for the attendance (e.g., Reading, Meeting, Prep).');
+      return;
+    }
+
+    generateQrMutation.mutate({ expiresIn: expiresInNum, purpose: purpose.trim() });
   };
 
   const copyToClipboard = async () => {
@@ -234,6 +241,21 @@ export default function GenerateQrScreen() {
               </button>
             </div>
           )}
+
+          {/* Purpose Input */}
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 mb-6 shadow-lg">
+            <div className="flex items-center mb-4">
+              <span className="text-gray-500 text-xl">🎯</span>
+              <ThemedText className="text-lg font-bold ml-2 dark:text-white">Purpose</ThemedText>
+            </div>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">Describe the reason for this attendance code (e.g., Reading, Programming, Meeting, Prep).</p>
+            <input
+              value={purpose}
+              onChange={(e) => setPurpose(e.target.value)}
+              placeholder="e.g., Reading – Programming Practice"
+              className="w-full border-2 border-gray-200 dark:border-gray-700 p-4 rounded-xl text-lg bg-white dark:bg-gray-800 dark:text-white focus:border-blue-500 focus:outline-none transition-colors"
+            />
+          </div>
 
           {/* Instructions */}
           {!qrCodeData && !error && (

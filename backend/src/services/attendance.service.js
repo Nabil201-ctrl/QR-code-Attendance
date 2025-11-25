@@ -62,6 +62,8 @@ class AttendanceService {
       date: new Date(),
       present: true,
       deviceFingerprint,
+      qrCode: qrCode._id,
+      purpose: qrCode.purpose,
     });
 
     return attendance;

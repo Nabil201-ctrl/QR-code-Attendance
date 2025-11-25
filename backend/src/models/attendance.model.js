@@ -5,6 +5,8 @@ const AttendanceSchema = new mongoose.Schema({
   date: { type: Date, required: true },
   present: { type: Boolean, default: false },
   deviceFingerprint: { type: String, required: true },
+  qrCode: { type: mongoose.Schema.Types.ObjectId, ref: 'QrCode' },
+  purpose: { type: String },
 });
 
 const AttendanceModel = mongoose.model('Attendance', AttendanceSchema);

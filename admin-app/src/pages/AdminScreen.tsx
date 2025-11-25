@@ -28,10 +28,10 @@ export default function AdminScreen() {
   }
 
   const students = data?.students || [];
-  const allDates = data?.allDates || [];
+  const allDates = data?.allDates || [] as { date: string; purpose?: string | null }[];
 
-  // Safe handling of latestDate
-  const latestDate = allDates.length > 0 ? allDates[allDates.length - 1] : undefined;
+  // Safe handling of latestDate (date string)
+  const latestDate = allDates.length > 0 ? allDates[allDates.length - 1].date : undefined;
   
   const presentCount = latestDate
     ? students.filter(student => {
@@ -48,6 +48,13 @@ export default function AdminScreen() {
     : 0;
 
   const totalStudents = students.length;
+
+  // Compute purpose categories and counts (how many sessions per purpose)
+  const purposeCounts = allDates.reduce((acc: Record<string, number>, d) => {
+    const key = d.purpose || 'General';
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {});
 
   return (
     <ThemedView className="flex-1">
@@ -146,6 +153,16 @@ export default function AdminScreen() {
               As of {latestDate}
             </ThemedText>
           )}
+          {/* Purpose categories summary */}
+          {Object.keys(purposeCounts).length > 0 && (
+            <div className="mt-4 flex gap-2 justify-center flex-wrap">
+              {Object.entries(purposeCounts).map(([purpose, count]) => (
+                <div key={purpose} className="bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full border border-gray-200 dark:border-gray-700 text-sm">
+                  <ThemedText className="font-medium">{purpose} • {count}</ThemedText>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Attendance List */}
@@ -173,10 +190,15 @@ export default function AdminScreen() {
                 {/* Table Header */}
                 <div className="flex bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
                   <ThemedText className="w-40 px-4 py-3 font-semibold text-sm">Student</ThemedText>
-                  {allDates.slice(0, 7).map(date => (
-                    <ThemedText key={date} className="w-20 px-2 py-3 font-semibold text-sm text-center">
-                      {new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                    </ThemedText>
+                  {allDates.slice(0, 7).map(d => (
+                    <div key={d.date} className="w-28 px-2 py-3 text-center">
+                      <ThemedText className="font-semibold text-sm block">
+                        {new Date(d.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      </ThemedText>
+                      <ThemedText className="text-xs text-gray-500 mt-1">
+                        {d.purpose || 'General'}
+                      </ThemedText>
+                    </div>
                   ))}
                 </div>
 
@@ -189,11 +211,11 @@ export default function AdminScreen() {
                         {student.matricNumber}
                       </ThemedText>
                     </div>
-                    {allDates.slice(0, 7).map(date => {
-                      const detail = student.attendanceDetails.find(d => d.date === date);
+                    {allDates.slice(0, 7).map(d => {
+                      const detail = student.attendanceDetails.find(dt => dt.date === d.date);
                       const isPresent = detail?.status === 1;
                       return (
-                        <div key={date} className="w-20 flex items-center justify-center px-2">
+                        <div key={d.date} className="w-28 flex items-center justify-center px-2">
                           <span className={`text-lg ${isPresent ? 'text-green-500' : 'text-red-500'}`}>
                             {isPresent ? '✅' : '❌'}
                           </span>

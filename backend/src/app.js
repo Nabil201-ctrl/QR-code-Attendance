@@ -37,8 +37,10 @@ app.get('/health', (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).send('Something broke!');
+  console.error(err.stack || err);
+  const status = err.status || 500;
+  const message = err.message || 'Internal server error';
+  res.status(status).json({ message });
 });
 
 module.exports = app;

@@ -19,11 +19,12 @@ export interface QrCodeResponse {
   data: string;
   expiresAt: string;
   qrCodeId: string;
+  purpose?: string;
 }
 
 export interface AttendanceResponse {
   students: Student[];
-  allDates: string[];
+  allDates: { date: string; purpose?: string | null }[];
 }
 
 // Enhanced fetch wrapper with debugging
@@ -97,10 +98,10 @@ export async function getAttendance(): Promise<AttendanceResponse> {
 }
 
 // QR Code functions
-export async function generateQrCode(expiresIn: number): Promise<QrCodeResponse> {
+export async function generateQrCode(expiresIn: number, purpose: string): Promise<QrCodeResponse> {
   return apiFetch('/admin/qr-code', {
     method: 'POST',
-    body: JSON.stringify({ expiresIn }),
+    body: JSON.stringify({ expiresIn, purpose }),
   });
 }
 

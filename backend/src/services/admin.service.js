@@ -4,19 +4,21 @@ const AttendanceModel = require('../models/attendance.model');
 
 class AdminService {
   async generateQrCode(generateQrCodeDto) {
-    const { expiresIn } = generateQrCodeDto;
+    const { expiresIn, purpose } = generateQrCodeDto;
     const expiresAt = new Date(Date.now() + expiresIn * 1000);
     const data = `ATTENDANCE-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
     const qrCode = await QrCodeModel.create({
       data,
       expiresAt,
+      purpose,
     });
 
     return {
       data: qrCode.data,
       expiresAt: qrCode.expiresAt.toISOString(),
-      qrCodeId: qrCode._id.toString()
+      qrCodeId: qrCode._id.toString(),
+      purpose: qrCode.purpose,
     };
   }
 
@@ -31,6 +33,22 @@ class AdminService {
 
     const allStudents = await StudentModel.find().exec();
     const allAttendance = await AttendanceModel.find().exec();
+
+    // For each meeting date, find a QR code created that day to get its purpose
+    const datePurposeMap = {};
+    for (const meetingDate of sortedMeetingDates) {
+      const start = new Date(meetingDate);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(start);
+      end.setDate(end.getDate() + 1);
+
+      const qr = await QrCodeModel.findOne({
+        createdAt: { $gte: start, $lt: end },
+      }).sort({ createdAt: -1 }).exec();
+
+      const key = meetingDate.toISOString().split('T')[0];
+      datePurposeMap[key] = qr ? qr.purpose : null;
+    }
 
     const studentAttendance = allStudents.map(student => {
       const studentRecords = allAttendance.filter(record => record.student.equals(student._id));
@@ -66,7 +84,7 @@ class AdminService {
 
     return {
       students: studentAttendance,
-      allDates: sortedMeetingDates.map(d => d.toISOString().split('T')[0]),
+      allDates: sortedMeetingDates.map(d => ({ date: d.toISOString().split('T')[0], purpose: datePurposeMap[d.toISOString().split('T')[0]] })),
     };
   }
 
