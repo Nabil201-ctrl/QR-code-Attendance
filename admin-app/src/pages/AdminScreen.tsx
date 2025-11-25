@@ -3,12 +3,31 @@ import { Link } from 'react-router-dom';
 import { ThemedText } from '../components/common/ThemedText';
 import { ThemedView } from '../components/common/ThemedView';
 import { getAttendance } from '../services/api';
+import { CSVLink } from 'react-csv';
+import { useEffect, useState } from 'react';
 
 export default function AdminScreen() {
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['attendance'],
     queryFn: getAttendance,
   });
+  const [csvData, setCsvData] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (data) {
+      const { students, allDates } = data;
+      const headers = ['Student Name', 'Matric Number', ...allDates.map(d => new Date(d.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }))];
+      const rows = students.map(student => {
+        const row = [student.name, student.matricNumber];
+        allDates.forEach(d => {
+          const detail = student.attendanceDetails.find(dt => dt.date === d.date);
+          row.push(detail?.status === 1 ? 'Present' : 'Absent');
+        });
+        return row;
+      });
+      setCsvData([headers, ...rows]);
+    }
+  }, [data]);
 
   const onRefresh = async () => {
     await refetch();
@@ -171,6 +190,13 @@ export default function AdminScreen() {
             <ThemedText type="subtitle" className="text-lg font-semibold">
               Attendance Records
             </ThemedText>
+            <CSVLink 
+              data={csvData}
+              filename={"attendance.csv"}
+              className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
+            >
+              Export to CSV
+            </CSVLink>
             <ThemedText className="text-gray-500">
               {totalStudents} students
             </ThemedText>
