@@ -46,8 +46,7 @@ const seedAttendance = async () => {
             return;
         }
 
-        let updatedCount = 0;
-        let createdCount = 0;
+        let processedCount = 0;
 
         for (const student of students) {
             const filter = {
@@ -74,25 +73,11 @@ const seedAttendance = async () => {
 
             const result = await Attendance.findOneAndUpdate(filter, update, options);
 
-            if (result && result._id) {
-                // Check if it was an insert or an update
-                // Mongoose doesn't directly return 'upserted' flag on findOneAndUpdate
-                // A simple heuristic: if it was just created, result might be identical to filter+update
-                // For simplicity, we'll increment based on this logic:
-                const isNew = result.createdAt.getTime() === result.updatedAt.getTime(); // Not always reliable, but a common pattern
-
-                if (result.isNew) { // Mongoose might set isNew property on newly created docs
-                     createdCount++;
-                } else if (result.__v === 0 && result.createdAt.getTime() === result.updatedAt.getTime()) {
-                    // Another heuristic for new doc with no prior updates
-                    createdCount++;
-                }
-                 else {
-                    updatedCount++;
-                }
+            if (result) {
+                processedCount++;
             }
         }
-        console.log(`Seeding complete: ${createdCount} attendance records created, ${updatedCount} updated.`);
+        console.log(`Seeding complete: ${processedCount} attendance records processed (created or updated).`);
 
     } catch (error) {
         console.error('❌ Error seeding attendance:', error);
