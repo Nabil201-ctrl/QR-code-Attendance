@@ -6,25 +6,69 @@ import { getAttendance } from '../services/api';
 import { CSVLink } from 'react-csv';
 import { useEffect, useState } from 'react';
 
+// Define types for your data
+interface AttendanceDetail {
+  date: string;
+  status: number;
+}
+
+interface Student {
+  _id: string;
+  name: string;
+  matricNumber: string;
+  attendanceDetails: AttendanceDetail[];
+}
+
+interface DateInfo {
+  date: string;
+  purpose?: string | null;
+}
+
+interface AttendanceData {
+  students: Student[];
+  allDates: DateInfo[];
+}
+
+// Type for CSV data
+type CSVData = (string | number)[][];
+
 export default function AdminScreen() {
-  const { data, isLoading, error, refetch } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery<AttendanceData>({
     queryKey: ['attendance'],
     queryFn: getAttendance,
   });
-  const [csvData, setCsvData] = useState<any[]>([]);
+  
+  const [csvData, setCsvData] = useState<CSVData>([]);
 
   useEffect(() => {
     if (data) {
       const { students, allDates } = data;
-      const headers = ['Student Name', 'Matric Number', ...allDates.map(d => new Date(d.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }))];
+      
+      // Create headers
+      const headers = [
+        'Student Name', 
+        'Matric Number', 
+        ...allDates.map(d => 
+          new Date(d.date).toLocaleDateString('en-US', { 
+            month: 'short', 
+            day: 'numeric',
+            year: 'numeric'
+          })
+        )
+      ];
+      
+      // Create rows for each student
       const rows = students.map(student => {
-        const row = [student.name, student.matricNumber];
+        const row: (string | number)[] = [student.name, student.matricNumber];
+        
         allDates.forEach(d => {
           const detail = student.attendanceDetails.find(dt => dt.date === d.date);
           row.push(detail?.status === 1 ? 'Present' : 'Absent');
         });
+        
         return row;
       });
+      
       setCsvData([headers, ...rows]);
     }
   }, [data]);
@@ -47,7 +91,7 @@ export default function AdminScreen() {
   }
 
   const students = data?.students || [];
-  const allDates = data?.allDates || [] as { date: string; purpose?: string | null }[];
+  const allDates = data?.allDates || [];
 
   // Safe handling of latestDate (date string)
   const latestDate = allDates.length > 0 ? allDates[allDates.length - 1].date : undefined;
@@ -169,7 +213,7 @@ export default function AdminScreen() {
           
           {latestDate && (
             <ThemedText className="text-gray-500 text-xs mt-2 text-center">
-              As of {latestDate}
+              As of {new Date(latestDate).toLocaleDateString()}
             </ThemedText>
           )}
           {/* Purpose categories summary */}
