@@ -29,6 +29,17 @@ router.post(
   }
 );
 
+router.get('/attendance/export', async (req, res, next) => {
+  try {
+    const csvData = await adminService.exportAttendance();
+    res.header('Content-Type', 'text/csv');
+    res.attachment('attendance.csv');
+    res.send(csvData);
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.get('/attendance', async (req, res, next) => {
   try {
     const result = await adminService.getAttendance();

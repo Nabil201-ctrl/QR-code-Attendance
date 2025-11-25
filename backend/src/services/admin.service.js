@@ -151,6 +151,37 @@ class AdminService {
   async deleteAttendance(id) {
     return AttendanceModel.findByIdAndDelete(id).exec();
   }
+
+  async exportAttendance() {
+    const { students, allDates } = await this.getAttendance();
+
+    // CSV Header
+    const headers = ['Matriculation Number', 'Name', ...allDates.map(d => `${d.date} (${d.purpose || 'General'})`)];
+    
+    // CSV Rows
+    const rows = students.map(student => {
+      const row = {
+        'Matriculation Number': student.matricNumber,
+        'Name': student.name,
+      };
+      student.attendanceDetails.forEach(detail => {
+        const header = allDates.find(d => d.date === detail.date);
+        if (header) {
+          const headerKey = `${header.date} (${header.purpose || 'General'})`;
+          row[headerKey] = detail.status;
+        }
+      });
+      return row;
+    });
+
+    // Convert to CSV string
+    const csvRows = [
+      headers.join(','),
+      ...rows.map(row => headers.map(header => row[header] !== undefined ? row[header] : '').join(','))
+    ];
+
+    return csvRows.join('\n');
+  }
 }
 
 module.exports = new AdminService();

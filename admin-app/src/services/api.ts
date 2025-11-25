@@ -154,3 +154,39 @@ export async function pingBackend(): Promise<boolean> {
     return false;
   }
 }
+
+export async function exportAttendanceCsv(): Promise<Response> {
+  // Use regular fetch to get the raw response, not apiFetch
+  // as apiFetch expects JSON and we need a blob for CSV
+  const url = `${API_BASE_URL}/admin/attendance/export`;
+  
+  console.log('🌐 API Request for CSV:', {
+    url,
+    method: 'GET',
+    timestamp: new Date().toISOString()
+  });
+
+  const response = await fetch(url, {
+    method: 'GET',
+  });
+
+  console.log('📡 API Response for CSV:', {
+    status: response.status,
+    statusText: response.statusText,
+    url: response.url,
+    ok: response.ok
+  });
+
+  if (!response.ok) {
+    let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+    try {
+      const errorText = await response.text();
+      errorMessage = errorText || errorMessage;
+    } catch {
+      // ignore
+    }
+    throw new Error(errorMessage);
+  }
+
+  return response;
+}
