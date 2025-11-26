@@ -40,7 +40,7 @@ class AttendanceService {
     }).exec();
 
     if (existingAttendance) {
-      throw new Error('Attendance already submitted for today');
+      return existingAttendance;
     }
 
     const existingFingerprint = await AttendanceModel.findOne({
