@@ -43,20 +43,6 @@ class AttendanceService {
       return existingAttendance;
     }
 
-    const existingFingerprint = await AttendanceModel.findOne({
-      deviceFingerprint,
-      date: {
-        $gte: today,
-        $lt: tomorrow,
-      },
-    }).exec();
-
-    if (existingFingerprint) {
-      throw new Error(
-        'This device has already been used to submit attendance for a different student today'
-      );
-    }
-
     const attendance = await AttendanceModel.create({
       student: student._id,
       date: new Date(),

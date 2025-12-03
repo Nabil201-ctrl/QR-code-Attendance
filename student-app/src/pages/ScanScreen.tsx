@@ -6,7 +6,6 @@ import { ThemedText } from '../components/common/ThemedText';
 import { ThemedView } from '../components/common/ThemedView';
 import { submitAttendance } from '../services/attendanceService';
 import {
-  generateDeviceFingerprint,
   markAsScannedToday
 } from '../utils/deviceUtils';
 import { queryClient } from '../utils/queryClient';
@@ -16,7 +15,6 @@ export default function ScanScreen() {
   const [qrCodeData, setQrCodeData] = useState('');
   const [name, setName] = useState('');
   const [matricNumber, setMatricNumber] = useState('');
-  const [deviceFingerprint, setDeviceFingerprint] = useState('');
   const [cameraPermission, setCameraPermission] = useState<boolean | null>(null);
   const [scanEnabled, setScanEnabled] = useState(true);
 
@@ -62,8 +60,6 @@ export default function ScanScreen() {
       } catch (error) {
         setCameraPermission(false);
       }
-
-      generateDeviceFingerprint().then(setDeviceFingerprint);
     };
 
     initialize();
@@ -143,7 +139,6 @@ export default function ScanScreen() {
     mutation.mutate({
       name: name.trim(),
       matricNumber: matricNumber.trim(),
-      deviceFingerprint,
       qrCodeData
     });
   };
@@ -308,17 +303,8 @@ export default function ScanScreen() {
               </div>
             )}
 
-            <div className="mt-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl border border-yellow-200 dark:border-yellow-800">
-              <ThemedText className="text-center text-sm text-yellow-800 dark:text-yellow-200">
-                🔒 Your device fingerprint is recorded to prevent duplicate submissions
-              </ThemedText>
-            </div>
-
             {import.meta.env.DEV && (
               <div className="mt-4 p-3 bg-gray-100 dark:bg-gray-800 rounded-lg">
-                <ThemedText className="text-xs font-mono break-all">
-                  Device Fingerprint: {deviceFingerprint}
-                </ThemedText>
                 <ThemedText className="text-xs font-mono break-all mt-2">
                   QR Data: {qrCodeData}
                 </ThemedText>

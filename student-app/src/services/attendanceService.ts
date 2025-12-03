@@ -3,7 +3,6 @@ import { API_BASE_URL } from "../constants/env";
 export interface SubmitAttendancePayload {
   name: string;
   matricNumber: string;
-  deviceFingerprint: string;
   qrCodeData: string;
 }
 

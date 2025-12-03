@@ -58,12 +58,31 @@ router.get('/students', async (req, res, next) => {
   }
 });
 
+const multer = require('multer');
+const upload = multer({ storage: multer.memoryStorage() });
+
 router.post(
   '/students',
   validationMiddleware(createStudentSchema),
   async (req, res, next) => {
     try {
       const result = await adminService.createStudent(req.body);
+      res.status(201).json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+router.post(
+  '/students/upload',
+  upload.single('file'),
+  async (req, res, next) => {
+    try {
+      if (!req.file) {
+        return res.status(400).send('No file uploaded.');
+      }
+      const result = await adminService.bulkCreateStudents(req.file.buffer);
       res.status(201).json(result);
     } catch (error) {
       next(error);

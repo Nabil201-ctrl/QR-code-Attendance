@@ -109,6 +109,41 @@ class AdminService {
     return student;
   }
 
+  async bulkCreateStudents(buffer) {
+    const students = [];
+    const duplicates = [];
+    const created = [];
+    const readableStream = require('stream').Readable.from(buffer.toString());
+    const csv = require('csv-parser');
+
+    return new Promise((resolve, reject) => {
+      readableStream
+        .pipe(csv())
+        .on('data', (row) => {
+          students.push(row);
+        })
+        .on('end', async () => {
+          for (const student of students) {
+            const { name, matricNumber } = student;
+            if (!name || !matricNumber) {
+              continue;
+            }
+            const existingStudent = await StudentModel.findOne({ matricNumber });
+            if (existingStudent) {
+              duplicates.push(student);
+            } else {
+              await StudentModel.create({ name, matricNumber });
+              created.push(student);
+            }
+          }
+          resolve({ created, duplicates });
+        })
+        .on('error', (error) => {
+          reject(error);
+        });
+    });
+  }
+
   async updateStudent(id, updateStudentDto) {
     const student = await StudentModel.findById(id);
     if (!student) {

@@ -117,6 +117,51 @@ export async function addStudent(studentData: { name: string; matricNumber: stri
   });
 }
 
+export async function bulkAddStudents(file: File) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const url = `${API_BASE_URL}/admin/students/upload`;
+    console.log('🌐 API Request (Bulk Upload):', {
+        url,
+        method: 'POST',
+        timestamp: new Date().toISOString()
+    });
+
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            body: formData,
+        });
+
+        console.log('📡 API Response (Bulk Upload):', {
+            status: response.status,
+            statusText: response.statusText,
+            url: response.url,
+            ok: response.ok
+        });
+
+        if (!response.ok) {
+            let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+            try {
+                const errorData = await response.json();
+                errorMessage = errorData.message || errorData.error || errorMessage;
+            } catch {
+                const text = await response.text();
+                errorMessage = text || errorMessage;
+            }
+            throw new Error(errorMessage);
+        }
+
+        const data = await response.json();
+        console.log('✅ API Success Data (Bulk Upload):', data);
+        return data;
+    } catch (error) {
+        console.log('🚨 API Fetch Error (Bulk Upload):', error);
+        throw error;
+    }
+}
+
 export async function updateStudent(studentId: string, studentData: Partial<Student>): Promise<Student> {
   return apiFetch(`/admin/students/${studentId}`, {
     method: 'PUT',
