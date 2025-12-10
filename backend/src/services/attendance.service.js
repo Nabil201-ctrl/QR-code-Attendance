@@ -17,13 +17,18 @@ class AttendanceService {
       throw new Error('QR Code has expired');
     }
 
-    let student = await StudentModel.findOne({ matricNumber }).exec();
+    // Find student in database - must be pre-registered by admin
+    const student = await StudentModel.findOne({ matricNumber }).exec();
 
     if (!student) {
-      student = await StudentModel.create({
-        name,
-        matricNumber,
-      });
+      throw new Error('Student not found. Your matric number is not registered in the system. Please contact your instructor or admin to register you before marking attendance.');
+    }
+
+    // Optionally verify name matches (case-insensitive, trimmed)
+    const registeredName = student.name.trim().toLowerCase();
+    const submittedName = name.trim().toLowerCase();
+    if (registeredName !== submittedName) {
+      throw new Error(`Name mismatch. The registered name for matric number ${matricNumber} does not match the name you entered. Please ensure you enter your name exactly as registered.`);
     }
 
     const today = new Date();

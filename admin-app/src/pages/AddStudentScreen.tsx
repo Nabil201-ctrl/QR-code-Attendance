@@ -125,7 +125,7 @@ export default function AddStudentScreen() {
         <div className="mb-4">
           <button
             onClick={() => {
-              const csv = 'name,matricNumber\nJohn Doe,2021001\nJane Smith,2021002\nMichael Johnson,2021003';
+              const csv = 'name,matricNumber\nJohn Doe,2021001\nJane Smith,23D/208CSC/586\nMichael Johnson,23/208CSC/587';
               const blob = new Blob([csv], { type: 'text/csv' });
               const url = window.URL.createObjectURL(blob);
               const a = document.createElement('a');

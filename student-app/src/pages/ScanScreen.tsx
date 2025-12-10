@@ -38,6 +38,14 @@ export default function ScanScreen() {
         if (typeof msg === 'string' && msg.toLowerCase().includes('expired')) {
           setExpiredModalVisible(true);
         }
+        // If student is not registered in the system
+        if (typeof msg === 'string' && (msg.toLowerCase().includes('not found') || msg.toLowerCase().includes('not registered'))) {
+          setNotRegisteredModalVisible(true);
+        }
+        // If name doesn't match
+        if (typeof msg === 'string' && msg.toLowerCase().includes('name mismatch')) {
+          setNameMismatchModalVisible(true);
+        }
       } catch (e) {
         // ignore
       }
@@ -47,6 +55,8 @@ export default function ScanScreen() {
 
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [expiredModalVisible, setExpiredModalVisible] = useState(false);
+  const [notRegisteredModalVisible, setNotRegisteredModalVisible] = useState(false);
+  const [nameMismatchModalVisible, setNameMismatchModalVisible] = useState(false);
   const [penaltyWarningVisible, setPenaltyWarningVisible] = useState(false);
   const [wasWarned, setWasWarned] = useState(false);
 
@@ -389,6 +399,96 @@ export default function ScanScreen() {
                     className="flex-1 bg-red-600 p-3 rounded-lg text-white"
                   >
                     <ThemedText className="text-center text-white">Proceed</ThemedText>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Not Registered Modal */}
+      {notRegisteredModalVisible && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="w-11/12 max-w-md bg-white dark:bg-gray-800 rounded-xl p-6">
+            <div className="flex items-start">
+              <div className="text-3xl mr-3">❌</div>
+              <div className="flex-1">
+                <ThemedText type="title" className="mb-2 text-red-600 dark:text-red-400">Not Registered</ThemedText>
+                <ThemedText className="text-sm text-gray-700 dark:text-gray-300 mb-4">
+                  Your matric number <span className="font-semibold">({matricNumber})</span> is not registered in the system.
+                </ThemedText>
+                <ThemedText className="text-sm text-gray-700 dark:text-gray-300 mb-4">
+                  Your attendance <span className="font-bold text-red-600 dark:text-red-400">cannot be recorded</span> until you are registered by your instructor or admin.
+                </ThemedText>
+                <div className="bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700 rounded-lg p-3 mb-4">
+                  <ThemedText className="text-sm text-yellow-800 dark:text-yellow-200">
+                    💡 <span className="font-semibold">What to do:</span> Contact your instructor or class admin to add your matric number to the system.
+                  </ThemedText>
+                </div>
+
+                <div className="flex gap-3 mt-4">
+                  <button
+                    onClick={() => { setNotRegisteredModalVisible(false); navigate(-1); }}
+                    className="flex-1 bg-gray-200 dark:bg-gray-700 p-3 rounded-lg"
+                  >
+                    <ThemedText className="text-center">Go Back</ThemedText>
+                  </button>
+
+                  <button
+                    onClick={() => { 
+                      setNotRegisteredModalVisible(false); 
+                      setMatricNumber('');
+                      setSubmitError(null);
+                    }}
+                    className="flex-1 bg-blue-500 p-3 rounded-lg text-white"
+                  >
+                    <ThemedText className="text-center text-white">Try Again</ThemedText>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Name Mismatch Modal */}
+      {nameMismatchModalVisible && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="w-11/12 max-w-md bg-white dark:bg-gray-800 rounded-xl p-6">
+            <div className="flex items-start">
+              <div className="text-3xl mr-3">⚠️</div>
+              <div className="flex-1">
+                <ThemedText type="title" className="mb-2 text-orange-600 dark:text-orange-400">Name Mismatch</ThemedText>
+                <ThemedText className="text-sm text-gray-700 dark:text-gray-300 mb-4">
+                  The name you entered does not match the registered name for matric number <span className="font-semibold">{matricNumber}</span>.
+                </ThemedText>
+                <ThemedText className="text-sm text-gray-700 dark:text-gray-300 mb-4">
+                  Please enter your name <span className="font-bold">exactly as it was registered</span> by your instructor.
+                </ThemedText>
+                <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg p-3 mb-4">
+                  <ThemedText className="text-sm text-blue-800 dark:text-blue-200">
+                    💡 <span className="font-semibold">Tip:</span> Check spelling, capitalization, and spacing of your name.
+                  </ThemedText>
+                </div>
+
+                <div className="flex gap-3 mt-4">
+                  <button
+                    onClick={() => { setNameMismatchModalVisible(false); navigate(-1); }}
+                    className="flex-1 bg-gray-200 dark:bg-gray-700 p-3 rounded-lg"
+                  >
+                    <ThemedText className="text-center">Go Back</ThemedText>
+                  </button>
+
+                  <button
+                    onClick={() => { 
+                      setNameMismatchModalVisible(false); 
+                      setName('');
+                      setSubmitError(null);
+                    }}
+                    className="flex-1 bg-blue-500 p-3 rounded-lg text-white"
+                  >
+                    <ThemedText className="text-center text-white">Try Again</ThemedText>
                   </button>
                 </div>
               </div>
