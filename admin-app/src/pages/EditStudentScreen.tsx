@@ -3,8 +3,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ThemedText } from '../components/common/ThemedText';
 import { ThemedView } from '../components/common/ThemedView';
+import type { Student } from '../services/api';
 import { getStudents, updateStudent } from '../services/api';
-import type { Student } from '../services/api'
 
 export default function EditStudentScreen() {
   const { id } = useParams<{ id: string }>();
@@ -32,10 +32,13 @@ export default function EditStudentScreen() {
       updateStudent(updatedStudent.id, updatedStudent.data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['students'] });
+      alert('Success: Student updated successfully');
       navigate(-1);
     },
     onError: (error: any) => {
-      alert(`Error: ${error.message}`);
+      console.error('Update error:', error);
+      const message = error?.message || 'Failed to update student';
+      alert(`Error: ${message}`);
     },
   });
 
@@ -44,9 +47,11 @@ export default function EditStudentScreen() {
       alert('Error: Please fill in all fields');
       return;
     }
-    if (id) {
-      mutation.mutate({ id, data: { name, matricNumber } });
+    if (!id || id === 'undefined') {
+      alert('Error: Invalid student ID');
+      return;
     }
+    mutation.mutate({ id, data: { name: name.trim(), matricNumber: matricNumber.trim() } });
   };
 
   if (isLoading) {

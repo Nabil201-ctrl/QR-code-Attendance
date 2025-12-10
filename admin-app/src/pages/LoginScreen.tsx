@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import * as passkeyApi from '../services/passkeyApi';
 
 const LoginScreen: React.FC<{ onLogin: () => void }> = ({ onLogin }) => {
-  const [username, setUsername] = useState('admin'); // Defaulting to 'admin' as there's only one
+  const [username, setUsername] = useState('');
   const [simplePasskey, setSimplePasskey] = useState('');
   const [isSimpleLoggingIn, setIsSimpleLoggingIn] = useState(false);
   const navigate = useNavigate();

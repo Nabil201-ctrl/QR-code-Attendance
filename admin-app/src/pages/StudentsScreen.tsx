@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { ThemedText } from '../components/common/ThemedText';
 import { ThemedView } from '../components/common/ThemedView';
 import type { Student } from '../services/api';
-import { deleteStudent, getStudents } from '../services/api';
+import { bulkDeleteStudents, deleteStudent, getStudents } from '../services/api';
 
 const AttendanceDetail: React.FC<{ details: { date: string; status: number }[] }> = ({ details }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -31,6 +31,7 @@ const AttendanceDetail: React.FC<{ details: { date: string; status: number }[] }
 
 export default function StudentsScreen() {
   const queryClient = useQueryClient();
+  const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
 
   const { data: students, isLoading, refetch } = useQuery<Student[]>({
     queryKey: ['students'],
@@ -41,15 +42,56 @@ export default function StudentsScreen() {
     mutationFn: deleteStudent,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['students'] });
+      alert('Success: Student deleted successfully');
     },
-    onError: (error: any) => {
-      alert(`Error: ${error.message}`);
+    onError: (error: unknown) => {
+      const message = error instanceof Error ? error.message : 'Failed to delete student';
+      alert(`Error: ${message}`);
+    },
+  });
+
+  const bulkDeleteMutation = useMutation({
+    mutationFn: bulkDeleteStudents,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['students'] });
+      setSelectedStudents([]);
+      alert(`Success: ${data.message}`);
+    },
+    onError: (error: unknown) => {
+      const message = error instanceof Error ? error.message : 'Failed to delete students';
+      alert(`Error: ${message}`);
     },
   });
 
   const handleDelete = (studentId: string) => {
     if (window.confirm('Are you sure you want to delete this student?')) {
       deleteMutation.mutate(studentId);
+    }
+  };
+
+  const handleBulkDelete = () => {
+    if (selectedStudents.length === 0) {
+      alert('Please select students to delete');
+      return;
+    }
+    if (window.confirm(`Are you sure you want to delete ${selectedStudents.length} student(s)?`)) {
+      bulkDeleteMutation.mutate(selectedStudents);
+    }
+  };
+
+  const toggleStudentSelection = (studentId: string) => {
+    setSelectedStudents(prev =>
+      prev.includes(studentId)
+        ? prev.filter(id => id !== studentId)
+        : [...prev, studentId]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedStudents.length === students?.length) {
+      setSelectedStudents([]);
+    } else {
+      setSelectedStudents(students?.map(s => s._id) || []);
     }
   };
 
@@ -80,11 +122,24 @@ export default function StudentsScreen() {
         </div>
 
         <div className="px-6 mb-6">
-          <Link to="/admin/add-student" className="block bg-blue-500 py-3 px-5 rounded-lg text-center hover:bg-blue-600 transition-colors">
-            <ThemedText className="text-white font-bold">
-              Add Student
-            </ThemedText>
-          </Link>
+          <div className="flex gap-3">
+            <Link to="/admin/add-student" className="flex-1 bg-blue-500 py-3 px-5 rounded-lg text-center hover:bg-blue-600 transition-colors">
+              <ThemedText className="text-white font-bold">
+                Add Student
+              </ThemedText>
+            </Link>
+            {selectedStudents.length > 0 && (
+              <button
+                onClick={handleBulkDelete}
+                disabled={bulkDeleteMutation.isPending}
+                className="flex-1 bg-red-500 hover:bg-red-600 py-3 px-5 rounded-lg text-center transition-colors disabled:opacity-50"
+              >
+                <ThemedText className="text-white font-bold">
+                  {bulkDeleteMutation.isPending ? 'Deleting...' : `Delete Selected (${selectedStudents.length})`}
+                </ThemedText>
+              </button>
+            )}
+          </div>
         </div>
 
         {isLoading ? (
@@ -100,25 +155,41 @@ export default function StudentsScreen() {
           <div className="mx-6 mb-6">
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden">
               <div className="flex bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
-                <ThemedText className="w-1/4 px-4 py-3 font-semibold text-sm">Name</ThemedText>
-                <ThemedText className="w-1/4 px-4 py-3 font-semibold text-sm">Matric Number</ThemedText>
-                <ThemedText className="w-1/4 px-4 py-3 font-semibold text-sm">Attendance</ThemedText>
-                <ThemedText className="w-1/4 px-4 py-3 font-semibold text-sm text-center">Actions</ThemedText>
+                <div className="w-12 px-4 py-3 flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={selectedStudents.length === students?.length && students.length > 0}
+                    onChange={toggleSelectAll}
+                    className="w-4 h-4 text-blue-600 rounded"
+                  />
+                </div>
+                <ThemedText className="flex-1 px-4 py-3 font-semibold text-sm">Name</ThemedText>
+                <ThemedText className="flex-1 px-4 py-3 font-semibold text-sm">Matric Number</ThemedText>
+                <ThemedText className="flex-1 px-4 py-3 font-semibold text-sm">Attendance</ThemedText>
+                <ThemedText className="w-48 px-4 py-3 font-semibold text-sm text-center">Actions</ThemedText>
               </div>
 
               {students?.map(student => (
                 <div key={student._id} className="flex border-b border-gray-100 dark:border-gray-700 items-center hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
-                  <div className="w-1/4 px-4 py-3">
+                  <div className="w-12 px-4 py-3 flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={selectedStudents.includes(student._id)}
+                      onChange={() => toggleStudentSelection(student._id)}
+                      className="w-4 h-4 text-blue-600 rounded"
+                    />
+                  </div>
+                  <div className="flex-1 px-4 py-3">
                     <ThemedText className="font-semibold">{student.name}</ThemedText>
                   </div>
-                  <div className="w-1/4 px-4 py-3">
+                  <div className="flex-1 px-4 py-3">
                     <ThemedText className="text-gray-600 dark:text-gray-400">{student.matricNumber}</ThemedText>
                   </div>
-                  <div className="w-1/4 px-4 py-3">
+                  <div className="flex-1 px-4 py-3">
                     <ThemedText>{student.attendancePercentage}%</ThemedText>
                     <AttendanceDetail details={student.attendanceDetails} />
                   </div>
-                  <div className="w-1/4 px-4 py-3 flex justify-center space-x-2">
+                  <div className="w-48 px-4 py-3 flex justify-center space-x-2">
                     <Link 
                       to={`/admin/edit-student/${student._id}`} 
                       className="bg-yellow-500 hover:bg-yellow-600 py-2 px-4 rounded-lg transition-colors"

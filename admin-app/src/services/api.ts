@@ -43,6 +43,7 @@ async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise
       ...options,
       headers: {
         'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache',
         ...options.headers,
       },
     });
@@ -57,17 +58,26 @@ async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise
     if (!response.ok) {
       let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
       
-      try {
-        const errorData = await response.json();
-        errorMessage = errorData.message || errorData.error || errorMessage;
-        console.log('❌ API Error Data:', errorData);
-      } catch {
-        // If response is not JSON, use status text
-        const text = await response.text();
-        errorMessage = text || errorMessage;
+      // Get response text first (works for both JSON and plain text)
+      const responseText = await response.text();
+      
+      if (responseText) {
+        try {
+          const errorData = JSON.parse(responseText);
+          errorMessage = errorData.message || errorData.error || errorMessage;
+          console.log('❌ API Error Data:', errorData);
+        } catch {
+          // Not JSON, use the text as-is
+          errorMessage = responseText || errorMessage;
+        }
       }
       
       throw new Error(errorMessage);
+    }
+
+    // Handle 204 No Content responses
+    if (response.status === 204) {
+      return {} as T;
     }
 
     const data = await response.json();
@@ -175,6 +185,20 @@ export async function deleteStudent(studentId: string): Promise<void> {
   });
 }
 
+export async function bulkDeleteStudents(studentIds: string[]): Promise<{ deleted: number; notFound: number; invalid: number; message: string }> {
+  return apiFetch('/admin/students/bulk-delete', {
+    method: 'POST',
+    body: JSON.stringify({ studentIds }),
+  });
+}
+
+export async function updateAttendance(studentId: string, date: string, status: number): Promise<{ message: string; record: unknown }> {
+  return apiFetch(`/admin/attendance/${studentId}/${date}`, {
+    method: 'PUT',
+    body: JSON.stringify({ status }),
+  });
+}
+
 // Test function to verify connection
 export async function testConnection(): Promise<boolean> {
   try {
@@ -182,8 +206,9 @@ export async function testConnection(): Promise<boolean> {
     const students = await getStudents();
     console.log('✅ Backend connection successful! Found', students.length, 'students');
     return true;
-  } catch (error: any) {
-    console.log('❌ Backend connection failed:', error.message);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    console.log('❌ Backend connection failed:', message);
     return false;
   }
 }

@@ -112,10 +112,37 @@ router.delete('/students/:id', async (req, res, next) => {
   }
 });
 
+router.post('/students/bulk-delete', async (req, res, next) => {
+  try {
+    const { studentIds } = req.body;
+    if (!studentIds || !Array.isArray(studentIds) || studentIds.length === 0) {
+      return res.status(400).json({ error: 'Student IDs array is required' });
+    }
+    const result = await adminService.bulkDeleteStudents(studentIds);
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.delete('/attendance/:id', async (req, res, next) => {
   try {
     await adminService.deleteAttendance(req.params.id);
     res.status(204).send();
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.put('/attendance/:studentId/:date', async (req, res, next) => {
+  try {
+    const { studentId, date } = req.params;
+    const { status } = req.body;
+    if (status === undefined || (status !== 0 && status !== 1)) {
+      return res.status(400).json({ error: 'Status must be 0 (absent) or 1 (present)' });
+    }
+    const result = await adminService.updateAttendance(studentId, date, status);
+    res.json(result);
   } catch (error) {
     next(error);
   }
