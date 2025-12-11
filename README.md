@@ -16,7 +16,6 @@ A simple QR-code based attendance system with an Admin web app to generate QR co
 
 - Admin can generate QR codes with an expiration and a "purpose" (e.g., Programming, Meeting, Reading).
 - Students scan a QR code, enter name and matric number, and submit attendance.
-- Device fingerprinting to reduce duplicate submissions from the same device.
 - Backend validates QR expiry and prevents duplicate attendance for a day.
 - Admin dashboard shows attendance per date and the associated purpose for each session.
 

@@ -20,7 +20,8 @@
     "express": "^5.1.0",
     "joi": "^18.0.1",
     "mongoose": "^8.19.4",
-    "multer": "^2.0.2"
+    "multer": "^2.0.2",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "nodemon": "^3.1.11"

@@ -4,7 +4,6 @@ const submitAttendanceSchema = Joi.object({
   name: Joi.string().required(),
   matricNumber: Joi.string().required(),
   qrCodeData: Joi.string().required(),
-  deviceFingerprint: Joi.string(),
 });
 
 module.exports = submitAttendanceSchema;

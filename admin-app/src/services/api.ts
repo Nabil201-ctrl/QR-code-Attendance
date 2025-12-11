@@ -11,7 +11,6 @@ export interface Student {
 export interface AttendanceData {
   name: string;
   matricNumber: string;
-  fingerprint: string;
   qrCode: string;
 }
 

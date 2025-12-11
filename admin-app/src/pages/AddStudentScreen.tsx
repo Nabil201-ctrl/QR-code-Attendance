@@ -92,7 +92,7 @@ export default function AddStudentScreen() {
 
       <div className="my-8 border-t border-gray-300 dark:border-gray-600 pt-8">
         <ThemedText type="title" className="text-2xl font-bold mb-4">
-          Or Upload Multiple Students via CSV
+          Or Upload Multiple Students via CSV/Excel
         </ThemedText>
         
         {/* Instructions */}
@@ -101,10 +101,10 @@ export default function AddStudentScreen() {
             <span className="text-blue-600 dark:text-blue-400 text-xl">ℹ️</span>
             <div className="flex-1">
               <ThemedText className="font-semibold text-blue-800 dark:text-blue-200 mb-2">
-                CSV Format Instructions:
+                File Format Instructions:
               </ThemedText>
               <ThemedText className="text-blue-700 dark:text-blue-300 text-sm">
-                Your CSV file must have these exact column headers:
+                Your CSV or Excel file must have these exact column headers:
               </ThemedText>
               <div className="bg-white dark:bg-gray-800 rounded p-2 mt-2 font-mono text-sm">
                 <ThemedText>name,matricNumber</ThemedText>
@@ -143,10 +143,10 @@ export default function AddStudentScreen() {
 
         {/* File Upload */}
         <div className="mb-4">
-          <ThemedText className="mb-2 font-semibold">Select CSV File</ThemedText>
+          <ThemedText className="mb-2 font-semibold">Select CSV or Excel File</ThemedText>
           <input
             type="file"
-            accept=".csv"
+            accept=".csv,.xlsx,.xls"
             onChange={(e) => setFile(e.target.files?.[0])}
             className="w-full border border-gray-300 p-2 rounded-lg dark:text-white dark:bg-gray-800 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-gray-700 dark:file:text-gray-300"
           />
@@ -162,7 +162,7 @@ export default function AddStudentScreen() {
           onClick={handleBulkUpload}
           disabled={!file || bulkMutation.isPending}
         >
-          {bulkMutation.isPending ? 'Uploading...' : 'Upload CSV and Add Students'}
+          {bulkMutation.isPending ? 'Uploading...' : 'Upload File and Add Students'}
         </button>
       </div>
 

@@ -4,7 +4,7 @@ const QrCodeModel = require('../models/qrcode.model');
 
 class AttendanceService {
   async submitAttendance(submitAttendanceDto) {
-    const { name, matricNumber, qrCodeData, deviceFingerprint } =
+    const { name, matricNumber, qrCodeData } =
       submitAttendanceDto;
 
     const qrCode = await QrCodeModel.findOne({ data: qrCodeData }).exec();
@@ -52,7 +52,6 @@ class AttendanceService {
       student: student._id,
       date: new Date(),
       present: true,
-      deviceFingerprint,
       qrCode: qrCode._id,
       purpose: qrCode.purpose,
     });

@@ -82,7 +82,7 @@ router.post(
       if (!req.file) {
         return res.status(400).send('No file uploaded.');
       }
-      const result = await adminService.bulkCreateStudents(req.file.buffer);
+      const result = await adminService.bulkCreateStudents(req.file.buffer, req.file.originalname);
       res.status(201).json(result);
     } catch (error) {
       next(error);

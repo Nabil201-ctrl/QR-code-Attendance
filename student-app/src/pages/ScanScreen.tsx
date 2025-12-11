@@ -50,7 +50,7 @@ export default function ScanScreen() {
   const [penaltyWarningVisible, setPenaltyWarningVisible] = useState(false);
   const [wasWarned, setWasWarned] = useState(false);
 
-  // Request permission and get device fingerprint
+  // Request camera permission
   useEffect(() => {
     const initialize = async () => {
       try {

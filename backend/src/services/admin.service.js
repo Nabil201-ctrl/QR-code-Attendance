@@ -127,39 +127,75 @@ class AdminService {
     return student;
   }
 
-  async bulkCreateStudents(buffer) {
+  async bulkCreateStudents(buffer, filename) {
     const students = [];
     const duplicates = [];
     const created = [];
-    const readableStream = require('stream').Readable.from(buffer.toString());
-    const csv = require('csv-parser');
 
-    return new Promise((resolve, reject) => {
-      readableStream
-        .pipe(csv())
-        .on('data', (row) => {
-          students.push(row);
-        })
-        .on('end', async () => {
-          for (const student of students) {
-            const { name, matricNumber } = student;
-            if (!name || !matricNumber) {
-              continue;
+    // Determine file type from filename
+    const isExcel = filename && (filename.endsWith('.xlsx') || filename.endsWith('.xls'));
+
+    if (isExcel) {
+      // Handle Excel files
+      const XLSX = require('xlsx');
+      const workbook = XLSX.read(buffer, { type: 'buffer' });
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+      const data = XLSX.utils.sheet_to_json(sheet);
+
+      for (const row of data) {
+        const { name, matricNumber } = row;
+        if (!name || !matricNumber) {
+          continue;
+        }
+        students.push({ name, matricNumber });
+      }
+
+      // Process students
+      for (const student of students) {
+        const { name, matricNumber } = student;
+        const existingStudent = await StudentModel.findOne({ matricNumber });
+        if (existingStudent) {
+          duplicates.push(student);
+        } else {
+          await StudentModel.create({ name, matricNumber });
+          created.push(student);
+        }
+      }
+
+      return { created, duplicates };
+    } else {
+      // Handle CSV files
+      const readableStream = require('stream').Readable.from(buffer.toString());
+      const csv = require('csv-parser');
+
+      return new Promise((resolve, reject) => {
+        readableStream
+          .pipe(csv())
+          .on('data', (row) => {
+            students.push(row);
+          })
+          .on('end', async () => {
+            for (const student of students) {
+              const { name, matricNumber } = student;
+              if (!name || !matricNumber) {
+                continue;
+              }
+              const existingStudent = await StudentModel.findOne({ matricNumber });
+              if (existingStudent) {
+                duplicates.push(student);
+              } else {
+                await StudentModel.create({ name, matricNumber });
+                created.push(student);
+              }
             }
-            const existingStudent = await StudentModel.findOne({ matricNumber });
-            if (existingStudent) {
-              duplicates.push(student);
-            } else {
-              await StudentModel.create({ name, matricNumber });
-              created.push(student);
-            }
-          }
-          resolve({ created, duplicates });
-        })
-        .on('error', (error) => {
-          reject(error);
-        });
-    });
+            resolve({ created, duplicates });
+          })
+          .on('error', (error) => {
+            reject(error);
+          });
+      });
+    }
   }
 
   async updateStudent(id, updateStudentDto) {
@@ -331,8 +367,7 @@ class AdminService {
       const newRecord = await AttendanceModel.create({
         student: studentId,
         date: startOfDay, // Use start of day in UTC
-        present: status === 1,
-        deviceFingerprint: 'admin-manual-entry'
+        present: status === 1
       });
       console.log('✅ Created new record:', newRecord);
       return { 
